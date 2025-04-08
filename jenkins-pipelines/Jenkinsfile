@@ -1,0 +1,29 @@
+pipeline {
+  agent any
+
+  environment {
+    BACKEND_IMAGE = "yourdockerhub/3tier-backend"
+    FRONTEND_IMAGE = "yourdockerhub/3tier-frontend"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/your-repo/your-3tier-app.git'
+      }
+    }
+
+    stage('Build Docker Images') {
+      steps {
+        sh './scripts/build.sh'
+      }
+    }
+
+    stage('Deploy with Docker Compose') {
+      steps {
+        sh './scripts/deploy.sh'
+      }
+    }
+  }
+}
+

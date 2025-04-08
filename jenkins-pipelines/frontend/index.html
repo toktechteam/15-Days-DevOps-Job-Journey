@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3-Tier DevOps Demo</title>
+  <style>
+    body {
+      background-color: #1e2a38;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    h1 { animation: blink 2s infinite; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Welcome to TheOpsKart 3-Tier DevOps App</h1>
+  <p id="api-data">Contacting backend...</p>
+
+  <script>
+    fetch("/api")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("api-data").innerText = data;
+      })
+      .catch(err => {
+        document.getElementById("api-data").innerText = "❌ Failed to reach backend.";
+      });
+  </script>
+</body>
+</html>
+
