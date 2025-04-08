@@ -2,28 +2,44 @@ pipeline {
   agent any
 
   environment {
-    BACKEND_IMAGE = "yourdockerhub/3tier-backend"
-    FRONTEND_IMAGE = "yourdockerhub/3tier-frontend"
+    AWS_REGION = "us-east-1"
+    AWS_ACCOUNT_ID = "211125544752"
+    ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+    BACKEND_IMAGE = "${ECR_REGISTRY}/3tier-backend"
+    FRONTEND_IMAGE = "${ECR_REGISTRY}/3tier-frontend"
   }
 
   stages {
     stage('Checkout') {
       steps {
-        git 'https://github.com/your-repo/your-3tier-app.git'
+        git branch: 'dev',
+            url: 'https://github.com/toktechteam/15-days-devops.git'
       }
     }
 
-    stage('Build Docker Images') {
+    stage('Login to ECR') {
       steps {
-        sh './scripts/build.sh'
+        sh '''
+          echo "🔐 Logging into ECR..."
+          aws ecr get-login-password --region $AWS_REGION | docker login \
+            --username AWS \
+            --password-stdin $ECR_REGISTRY
+        '''
       }
     }
 
-    stage('Deploy with Docker Compose') {
+    stage('Build & Push Images') {
       steps {
-        sh './scripts/deploy.sh'
+        sh '''
+          echo "🐳 Building and pushing backend image..."
+          docker build -t $BACKEND_IMAGE "$WORKSPACE/jenkins-pipelines/backend"
+          docker push $BACKEND_IMAGE
+
+          echo "🌐 Building and pushing frontend image..."
+          docker build -t $FRONTEND_IMAGE "$WORKSPACE/jenkins-pipelines/frontend"
+          docker push $FRONTEND_IMAGE
+        '''
       }
     }
   }
 }
-
