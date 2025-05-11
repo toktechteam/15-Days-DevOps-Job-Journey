@@ -42,7 +42,7 @@ Imagine your app works locally but crashes in the cloud because of version misma
 | Setting              | Value                                                       |
 |----------------------|-------------------------------------------------------------|
 | Name                 | devops-day05                                                |
-| OS                   | Ubuntu Server 24.04, SSD Volume Type, ami-075686beab831bb7f |
+| OS                   | Ubuntu Server 22.04, SSD Volume Type, ami-0f9de6e2d2f067fca |
 | Instance type        | t2.micro                                                    |
 | Key pair             | Create new, download `.pem` file                            |
 | Security group       | Allow SSH (22), HTTP (80), Custom Port (8080, 3000)         |
