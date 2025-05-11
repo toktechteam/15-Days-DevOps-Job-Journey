@@ -1,5 +1,5 @@
 
-# 📦 Day 2: Git & GitHub Basics
+# 📦 Day 4: Git & GitHub Basics
 
 Welcome to Day 2 of your DevOps journey!  
 There’s **no DevOps without version control** — and that starts with Git & GitHub.
@@ -282,5 +282,3 @@ Generate from: [https://github.com/settings/tokens](https://github.com/settings/
 - Real-world flow of pull requests, reviews, rebasing, and resolving conflicts
 
 ---
-
-## ⏭️ Next Up: Linux Essentials for DevOps!
