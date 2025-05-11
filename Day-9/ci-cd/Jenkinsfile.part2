@@ -1,0 +1,20 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Install Dependencies') {
+      steps {
+        sh 'cd $WORKSPACE/backend && npm install && npm install --save-dev jest'
+      }
+    }
+    stage('Run Tests') {
+      steps {
+        sh 'cd $WORKSPACE/backend/__tests__/ && npm test'
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: student-management-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: student_management
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    image: toktechteam/student-backend
+    container_name: student-management-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=root_password
+      - DB_NAME=student_management
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Frontend Service
+  frontend:
+    image: toktechteam/student-frontend
+    container_name: student-management-frontend
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:

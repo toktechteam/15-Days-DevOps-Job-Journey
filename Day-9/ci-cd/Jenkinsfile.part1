@@ -1,0 +1,15 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Install Dependencies') {
+      steps {
+        sh 'cd $WORKSPACE/backend && npm install'
+      }
+    }
+  }
+}
