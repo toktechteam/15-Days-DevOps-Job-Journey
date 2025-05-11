@@ -23,8 +23,8 @@ Docker Compose lets you:
 | Setting              | Value                                                       |
 |----------------------|-------------------------------------------------------------|
 | Name                 | devops-day06                                                |
-| OS                   | Ubuntu Server 24.04, SSD Volume Type, ami-075686beab831bb7f |
-| Instance type        | t2.micro                                                    |
+| OS                   | Ubuntu Server 22.04, SSD Volume Type, ami-0f9de6e2d2f067fca |
+| Instance type        | t2.medium                                                    |
 | Key pair             | Create new, download `.pem` file                            |
 | Security group       | Allow SSH (22), HTTP (80), Custom Port (8080, 3000)         |
 
@@ -55,11 +55,18 @@ $ sudo usermod -aG docker $USER
 $ sudo systemctl enable docker
 $ sudo chmod 777 /var/run/docker.sock
 
+```
+---
+```bash
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verify the installation
+docker-compose --version
 
 
 ```
-
----
 ---
 ### Basic `docker-compose.yml`
 
