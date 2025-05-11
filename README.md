@@ -1,6 +1,6 @@
 # 🚀 15-Days DevOps Job Journey – Solution Repo
 
-Welcome to the **official hands-on solution repository** for the [15-Days DevOps Job Journey](https://your-ebook-link.com) eBook by [Roshan Kumar Singh](https://www.linkedin.com/in/re-roshan).  
+Welcome to the **official hands-on solution repository** for the [15-Days DevOps Job Journey]([https://your-ebook-link.com](https://www.theopskart.com/products/15-Day-DevOps-Job-Journey-The-Ultimate-Beginners-Guide-67f16adc4c1ba42ebbe03c28)) eBook by [Roshan Kumar Singh](https://www.linkedin.com/in/roshan-singh-82985629/).  
 This repo provides day-wise practical solutions, Docker/Terraform/Jenkins code, monitoring setups, and job-ready interview Q&As.
 
 > 📘 Whether you're preparing for your first DevOps job or looking to upskill into automation, pipelines, and cloud deployment — this guide walks you through **hands-on labs step-by-step.**
@@ -11,19 +11,19 @@ This repo provides day-wise practical solutions, Docker/Terraform/Jenkins code, 
 
 | Day | Focus Area                           | Hands-On Labs + Interview |
 |-----|--------------------------------------|---------------------------|
-| 01  | DevOps Basics + SDLC Workflow        | ✅                         |
-| 02  | AWS EC2 + Manual Deployment          | ✅                         |
-| 03  | Linux Essentials for DevOps          | ✅                         |
-| 04  | Git & GitHub                         | ✅                         |
-| 05  | Docker Basics                        | ✅                         |
-| 06  | Docker Compose & Multi-Container     | ✅                         |
-| 07  | CI/CD with Jenkins                   | 🔒 (EBook only)           |
-| 08  | Jenkins Pipelines                    | 🔒 (EBook only)           |
-| 09  | CI/CD + Docker + Jenkins + Trivy     | 🔒 (EBook only)           |
-| 10  | Terraform & Infrastructure as Code   | 🔒 (EBook only)           |
-| 11  | Full Stack Infra Setup with Terraform| 🔒 (EBook only)           |
-| 12  | Monitoring: Prometheus + Grafana     | 🔒 (EBook only)           |
-| 13  | Final Project with CI/CD + Infra     | 🔒 (EBook only)           |
+| 01  | DevOps Basics + SDLC Workflow        | ✅                        |
+| 02  | AWS EC2 + Manual Deployment          | ✅                        |
+| 03  | Linux Essentials for DevOps          | ✅                        |
+| 04  | Git & GitHub                         | ✅                        |
+| 05  | Docker Basics                        | ✅                        |
+| 06  | Docker Compose & Multi-Container     | ✅                        |
+| 07  | CI/CD with Jenkins                   | ✅                        |
+| 08  | Jenkins Pipelines                    | ✅                        |
+| 09  | CI/CD + Docker + Jenkins + Trivy     | ✅                        |
+| 10  | Terraform & Infrastructure as Code   | ✅                        |
+| 11  | Full Stack Infra Setup with Terraform| ✅                        |
+| 12  | Monitoring: Prometheus + Grafana     | ✅                        |
+| 13  | Final Project with CI/CD + Infra     | ✅                        |
 
 ---
 
@@ -59,13 +59,13 @@ Want full access to:
 - Real CI/CD pipeline with Docker, Jenkins, SonarQube, Trivy?
 - Monitoring & Final Projects?
 
-👉 [Grab the EBook Here → ₹399 Launch Offer](https://your-ebook-link.com)
-
+👉 [Grab the EBook Free Here →  Launch Offer](https://www.theopskart.com/products/15-Day-DevOps-Job-Journey-The-Ultimate-Beginners-Guide-67f16adc4c1ba42ebbe03c28)
+Solution of this Ebook You can buy from website - https://wwww.theopskart.com
 ---
 
 ## 🙌 Connect With Me
 
-- 🔗 [LinkedIn – Roshan Kumar Singh](https://www.linkedin.com/in/re-roshan)
+- 🔗 [LinkedIn – Roshan Kumar Singh](https://www.linkedin.com/in/roshan-singh-82985629/)
 - 📺 [YouTube – TheOpsKart](https://www.youtube.com/@TheOpsKart-r8q)
 - 🌐 [Website – theopskart.com](https://www.theopskart.com/)
 
