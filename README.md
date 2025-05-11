@@ -1,6 +1,6 @@
 # 🚀 15-Days DevOps Job Journey – Solution Repo
 
-Welcome to the **official hands-on solution repository** for the [15-Days DevOps Job Journey]([https://your-ebook-link.com](https://www.theopskart.com/products/15-Day-DevOps-Job-Journey-The-Ultimate-Beginners-Guide-67f16adc4c1ba42ebbe03c28)) eBook by [Roshan Kumar Singh](https://www.linkedin.com/in/roshan-singh-82985629/).  
+Welcome to the **official hands-on solution repository** for the **[15-Days DevOps Job Journey](https://www.theopskart.com/products/15-Day-DevOps-Job-Journey-The-Ultimate-Beginners-Guide-67f16adc4c1ba42ebbe03c28)** eBook by [Roshan Kumar Singh](https://www.linkedin.com/in/roshan-singh-82985629/).  
 This repo provides day-wise practical solutions, Docker/Terraform/Jenkins code, monitoring setups, and job-ready interview Q&As.
 
 > 📘 Whether you're preparing for your first DevOps job or looking to upskill into automation, pipelines, and cloud deployment — this guide walks you through **hands-on labs step-by-step.**
