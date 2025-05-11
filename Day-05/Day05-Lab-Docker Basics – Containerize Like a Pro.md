@@ -193,7 +193,7 @@ docker build -t simple-python-server .
 
 ```bash
 docker run -d --name myserver -p 8080:8080 --network mynet simple-python-server 
-docker run -d --name app -p 80:80 --network mynet my-app-image
+docker run -d --name app -p 80:80 --network mynet nginx
 ```
 
 Now `app` can talk to `myserver` using the name `myserver`.
