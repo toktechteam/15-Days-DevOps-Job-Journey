@@ -179,11 +179,24 @@ docker network create mynet
 
 ### Run Containers in Same Network
 ```bash
-docker run -d --name db --network mynet mysql
-docker run -d --name app --network mynet my-app-image
+  # Create a dockerfile with below content & Crete Docker Image.
+
+FROM python:3.9-slim
+WORKDIR /app
+CMD ["python3", "-m", "http.server", "8080"]
 ```
 
-Now `app` can talk to `db` using the name `db`.
+```bash
+docker build -t simple-python-server .
+
+```
+
+```bash
+docker run -d --name myserver -p 8080:8080 --network mynet simple-python-server 
+docker run -d --name app -p 80:80 --network mynet my-app-image
+```
+
+Now `app` can talk to `myserver` using the name `myserver`.
 
 ---
 
