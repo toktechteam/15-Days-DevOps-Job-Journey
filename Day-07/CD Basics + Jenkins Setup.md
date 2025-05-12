@@ -36,7 +36,7 @@ Jenkins is:
 | Setting              | Value                                               |
 |----------------------|-----------------------------------------------------|
 | Name                 | devops-day08                                        |
-| OS                   | Amazon Linux 2023 AMI 2023, ami-05572e392e80aee89   |
+| OS                   | Amazon Linux 2023 AMI 2023, ami-0bc72bd3b8ba0b59d   |
 | Instance type        | t3.medium                                           |
 | Key pair             | Create new, download `.pem` file                    |
 | Security group       | Allow SSH (22), HTTP (80), Custom Port (8080, 3000) |
