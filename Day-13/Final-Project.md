@@ -133,4 +133,4 @@ By completing this project, you will:
 
 ---
 
-# 🙏 Jai Mahakaal 🗱️  | TheOpsKart | Real-World DevOps Training.
+# TheOpsKart | Real-World DevOps Training.
