@@ -51,8 +51,20 @@ chmod 400 your-key.pem
 ssh -i your-key.pem ubuntu@<your-ec2-public-ip>
 
 ```
+### ✅ 2.1. Run Jenkins on Ec2 machine | Amazon Linux 2023 AMI 2023
+```bash
 
-### ✅ 2. Run Jenkins as container and mount volumes outside the container
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto -y
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo dnf install jenkins -y
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+```
+
+### ✅ 2.2. Run Jenkins as container and mount volumes outside the container
 ```bash
 sudo yum update -y
 sudo yum install docker -y
