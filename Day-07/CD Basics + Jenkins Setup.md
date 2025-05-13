@@ -56,9 +56,11 @@ ssh -i your-key.pem ubuntu@<your-ec2-public-ip>
 
 sudo dnf update -y
 sudo dnf install java-17-amazon-corretto -y
+sudo dnf install git
 sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
 sudo dnf install jenkins -y
+sudo chown -R jenkins:jenkins /var/lib/jenkins/*
 sudo systemctl start jenkins
 sudo systemctl status jenkins
 
