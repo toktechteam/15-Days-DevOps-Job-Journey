@@ -136,6 +136,23 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 ---
 
+## Env CleanUp - Uninstall Jenkins
+
+```bash
+
+sudo systemctl stop jenkins
+sudo systemctl disable jenkins
+sudo dnf remove jenkins -y
+sudo rm -f /etc/yum.repos.d/jenkins.repo 
+sudo rpm -e gpg-pubkey-$(rpm -q gpg-pubkey --qf "%{VERSION}-%{RELEASE}\n" | grep -i jenkins)
+sudo rm -rf /var/lib/jenkins/
+sudo dnf remove java-17-amazon-corretto -y
+sudo dnf clean all
+
+```
+
+---
+
 ## ✅ Outcome
 
 By end of Day 7, you will:
