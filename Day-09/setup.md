@@ -195,7 +195,17 @@ Configure SonarQube Scanner in Jenkins:
 
 1. You must have credentials with ID 'docker-hub-creds' configured in Jenkins
 2. To set this up, go to Jenkins > Manage Jenkins > Manage Credentials > Add Credentials
+
+![image](https://github.com/user-attachments/assets/64e8b18d-d4ab-4da9-8a35-dfcf9fd16cc4)
+
 3. Select "Username with password" type and set the ID to 'docker-hub-creds'
+
+
+![image](https://github.com/user-attachments/assets/c00ed29b-48f6-49b4-be30-04d4a29e51b1)
+
+
+![image](https://github.com/user-attachments/assets/e183a3c7-55d9-4b90-94ba-054b172b912e)
+
 
 
 ### Docker Hub Repository Access:
