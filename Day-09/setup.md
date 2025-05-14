@@ -9,7 +9,7 @@ This guide helps you prepare your EC2 environment for running a complete Jenkins
 | Setting              | Value                                                    |
 |----------------------|----------------------------------------------------------|
 | Name                 | devops-day09                                             |
-| OS                   | Amazon Linux 2023 AMI 2023, ami-05572e392e80aee89        |
+| OS                   | Amazon Linux 2023 AMI 2023, ami-0953476d60561c955        |
 | Instance type        | t3.medium                                                |
 | Key pair             | Create new, download `.pem` file                         |
 | Security group       | Allow SSH (22), HTTP (80), Custom TCP (8080, 3000, 9000) |
@@ -26,7 +26,6 @@ ssh -i your-key.pem ec2-user@<EC2-PUBLIC-IP>
 ### Amazon Linux:
 ```bash
 sudo yum update -y
-sudo amazon-linux-extras enable docker
 sudo yum install docker -y
 sudo systemctl start docker
 sudo systemctl enable docker
