@@ -205,8 +205,18 @@ Configure SonarQube Scanner in Jenkins:
 
 
 ![image](https://github.com/user-attachments/assets/e183a3c7-55d9-4b90-94ba-054b172b912e)
+   
+---
+
+## Create GitHub Cred. in Jenkins 
 
 
+1. Create cred. for GitHub as well. To create cred. for GitHub you should have Github-Token with you.
+2. This is required as password for your github account.
+
+   ![image](https://github.com/user-attachments/assets/1ea9f1d0-10c1-4ed0-bfba-0930a979c56e)
+   
+---
 
 ### Docker Hub Repository Access:
 
