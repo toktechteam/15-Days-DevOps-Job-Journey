@@ -113,6 +113,7 @@ $ sudo yum install -y nodejs
 ```bash
 $ LATEST=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep browser_download_url | grep "Linux-64bit.rpm\"" | cut -d '"' -f 4)
 $ wget $LATEST
+$ sudo rpm -ivh trivy_0.62.1_Linux-64bit.rpm
 
 ```
 
