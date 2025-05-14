@@ -173,12 +173,20 @@ $ sonar-scanner --version
 Impt: Install SonarQube ScannerVersion 2.18 version plug-in in jenkins
 
 🔧 After Plugin Install:
-Configure SonarQube Server in Jenkins:
+Configure SonarQube Scanner in Jenkins:
 
 1. Go to Jenkins > Manage Jenkins > Configure System
-2. Find the SonarQube servers section
-3. Add your SonarQube server with name 'SonarLocal'
-4. Provide the server URL and authentication token
+
+   
+![image](https://github.com/user-attachments/assets/de5952ed-557f-4b3b-9fc7-9210b20dd443)
+
+3. Find the SonarQube servers section
+4. Add your SonarQube server with name 'SonarLocal'
+5. Provide the server URL and authentication token
+
+![image](https://github.com/user-attachments/assets/16434021-0dd6-46c1-85c1-2174f8b7032a)
+
+
 
 ---
 ## Important Notes About Docker-Hub Image Push Stage:
