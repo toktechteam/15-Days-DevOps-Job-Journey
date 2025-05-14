@@ -55,24 +55,37 @@ docker-compose --version
 
 ---
 
-## ☁️ Step 3: Run Jenkins (Using Docker)
-
+### ✅ 3.1. Run Jenkins on Ec2 machine | Amazon Linux 2023 AMI 2023
 ```bash
+
 sudo dnf update -y
 sudo dnf install java-17-amazon-corretto -y
-java -version
+sudo dnf install git
 sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
 sudo dnf install jenkins -y
+sudo chown -R jenkins:jenkins /var/lib/jenkins/*
 sudo systemctl start jenkins
-sudo systemctl enable jenkins
 sudo systemctl status jenkins
 
-sudo usermod -aG docker jenkins
-sudo chmod 777 /var/run/docker.sock
-sudo systemctl restart jenkins
+```
+
+### ✅ 3.2. Run Jenkins as container and mount volumes outside the container
+```bash
+sudo yum update -y
+sudo yum install docker -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+newgrp docker
+
+docker run -d --name jenkins \
+  -p 8080:8080 -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  jenkins/jenkins:lts
 
 ```
+
 
 📌 To get the admin password:
 ```bash
