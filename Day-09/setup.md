@@ -161,7 +161,7 @@ $ docker-compose -f docker-compose-sonar.yml up -d
 $ cd /opt
 $ sudo wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
 $ sudo unzip sonar-scanner-cli-*.zip
-$ sudo mv sonar-scanner-* sonar-scanner
+$ sudo mv sonar-scanner-5.0.1.3006-linux sonar-scanner
 $ sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/bin/sonar-scanner
 $ sonar-scanner --version
 
