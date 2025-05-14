@@ -112,11 +112,8 @@ $ sudo yum install -y nodejs
 
 ### Amazon Linux:
 ```bash
-$ LATEST=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep browser_download_url | grep rpm | cut -d '"' -f 4)
+$ LATEST=$(curl -s https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep browser_download_url | grep "Linux-64bit.rpm\"" | cut -d '"' -f 4)
 $ wget $LATEST
-$ sudo rpm -ivh $(basename $LATEST)
-$ remove all other downloads file only rpm 64 bit needed on your laptop.
-$ rpm -ivh trivy_0.61.1_Linux-64bit.rpm
 
 ```
 
