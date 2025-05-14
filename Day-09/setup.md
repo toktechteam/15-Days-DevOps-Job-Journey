@@ -170,7 +170,7 @@ $ sonar-scanner --version
 
 ---
 ➡️ Open: `http://<EC2-IP>:9000` → Login with `admin/admin`
-Impt: Install SonarQube Scanner Version 2.18 and Cobetura plug-in in jenkins
+Impt: Install SonarQube Scanner Version 2.18 and cobertura plug-in in jenkins
 
 🔧 After Plugin Install:
 Configure SonarQube Scanner in Jenkins:
