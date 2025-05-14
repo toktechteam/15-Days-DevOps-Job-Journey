@@ -54,6 +54,7 @@ docker-compose --version
 ```
 
 ---
+## ⚙️ Step 3: Install Jenkins
 
 ### ✅ 3.1. Run Jenkins on Ec2 machine | Amazon Linux 2023 AMI 2023
 ```bash
@@ -64,9 +65,9 @@ sudo dnf install git
 sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
 sudo dnf install jenkins -y
-sudo chown -R jenkins:jenkins /var/lib/jenkins/*
 sudo systemctl start jenkins
 sudo systemctl status jenkins
+sudo chown -R jenkins:jenkins /var/lib/jenkins/*
 
 ```
 
