@@ -1,0 +1,67 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE/editor configs
+.idea/
+*.iml
+.vscode/
+
+# Logs and temp
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.pid
+*.orig
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Terraform (from root or any subdirectory)
+**/.terraform/
+**/.terraform.lock.hcl
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+**/*.backup
+**/crash.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Output archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.gz
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS-specific
+ehthumbs.db
+Desktop.ini
+
+
