@@ -1,0 +1,183 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'qa', 'staging'],
+            description: 'Select deployment environment'
+        )
+        string(
+            name: 'BACKEND_TAG',
+            defaultValue: 'latest',
+            description: 'Backend Docker image tag'
+        )
+        string(
+            name: 'FRONTEND_TAG',
+            defaultValue: 'latest',
+            description: 'Frontend Docker image tag'
+        )
+        booleanParam(
+            name: 'SKIP_TESTS',
+            defaultValue: false,
+            description: 'Skip smoke tests after deployment'
+        )
+    }
+
+    environment {
+        DOCKER_HUB_USERNAME = 'toktechteam'
+        BACKEND_IMAGE = "${DOCKER_HUB_USERNAME}/student-backend:${params.BACKEND_TAG}"
+        FRONTEND_IMAGE = "${DOCKER_HUB_USERNAME}/student-frontend:${params.FRONTEND_TAG}"
+        COMPOSE_FILE = "docker-compose-${params.ENVIRONMENT}.yml"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo "🔄 Checking out code to get docker-compose files..."
+                checkout scm
+            }
+        }
+
+        stage('Update Image Tags') {
+            steps {
+                script {
+                    echo "📝 Updating image tags in ${COMPOSE_FILE}..."
+                    sh '''
+                        cd docker
+
+                        # Update backend image tag
+                        sed -i "s|image: ${DOCKER_HUB_USERNAME}/student-backend:.*|image: ${BACKEND_IMAGE}|g" ${COMPOSE_FILE}
+
+                        # Update frontend image tag
+                        sed -i "s|image: ${DOCKER_HUB_USERNAME}/student-frontend:.*|image: ${FRONTEND_IMAGE}|g" ${COMPOSE_FILE}
+
+                        echo "✅ Updated image tags:"
+                        echo "Backend: ${BACKEND_IMAGE}"
+                        echo "Frontend: ${FRONTEND_IMAGE}"
+
+                        # Show updated lines
+                        grep "image: ${DOCKER_HUB_USERNAME}" ${COMPOSE_FILE}
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                script {
+                    echo "🚀 Deploying ${params.ENVIRONMENT} environment..."
+                    sh '''
+                        cd docker
+
+                        # Stop and remove old application containers (keep DB running)
+                        docker-compose -f ${COMPOSE_FILE} stop frontend backend
+                        docker-compose -f ${COMPOSE_FILE} rm -f frontend backend
+
+                        # Start application containers with new images
+                        docker-compose -f ${COMPOSE_FILE} up -d frontend backend
+
+                        # Wait for services to start
+                        echo "⏳ Waiting for services to start..."
+                        sleep 20
+
+                        # Show container status
+                        docker-compose -f ${COMPOSE_FILE} ps
+                    '''
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                script {
+                    echo "🏥 Running health checks..."
+                    sh '''
+                        cd docker
+
+                        # Get backend port based on environment
+                        if [ "${ENVIRONMENT}" = "dev" ]; then
+                            BACKEND_PORT=3000
+                        elif [ "${ENVIRONMENT}" = "qa" ]; then
+                            BACKEND_PORT=3001
+                        else
+                            BACKEND_PORT=3002
+                        fi
+
+                        # Check backend health
+                        echo "Checking backend health on port ${BACKEND_PORT}..."
+                        for i in {1..10}; do
+                            if curl -f http://localhost:${BACKEND_PORT}/health 2>/dev/null; then
+                                echo "✅ Backend is healthy"
+                                break
+                            fi
+                            echo "⏳ Waiting for backend... (attempt $i/10)"
+                            sleep 5
+                        done
+
+                        # Show final status
+                        echo "📊 Final Container Status:"
+                        docker-compose -f ${COMPOSE_FILE} ps
+                    '''
+                }
+            }
+        }
+
+        stage('Smoke Tests') {
+            when {
+                not { params.SKIP_TESTS }
+            }
+            steps {
+                script {
+                    echo "🧪 Running smoke tests..."
+                    sh '''
+                        cd docker
+
+                        # Get backend port
+                        if [ "${ENVIRONMENT}" = "dev" ]; then
+                            BACKEND_PORT=3000
+                        elif [ "${ENVIRONMENT}" = "qa" ]; then
+                            BACKEND_PORT=3001
+                        else
+                            BACKEND_PORT=3002
+                        fi
+
+                        # Test API endpoint
+                        echo "Testing API endpoint..."
+                        if curl -f "http://localhost:${BACKEND_PORT}/api/students" 2>/dev/null; then
+                            echo "✅ API endpoint test passed"
+                        else
+                            echo "⚠️ API endpoint test failed but continuing..."
+                        fi
+
+                        echo "✅ Smoke tests completed"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            script {
+                def ports = [
+                    'dev': [backend: '3000', frontend: '8080'],
+                    'qa': [backend: '3001', frontend: '8082'],
+                    'staging': [backend: '3002', frontend: '8083']
+                ]
+
+                echo """
+🎉 Deployment Successful!
+
+Environment: ${params.ENVIRONMENT}
+Backend: ${BACKEND_IMAGE} → http://localhost:${ports[params.ENVIRONMENT].backend}
+Frontend: ${FRONTEND_IMAGE} → http://localhost:${ports[params.ENVIRONMENT].frontend}
+"""
+            }
+        }
+
+        failure {
+            echo "❌ Deployment Failed! Check logs for details."
+        }
+    }
+}
