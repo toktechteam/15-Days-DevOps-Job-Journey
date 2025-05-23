@@ -62,39 +62,34 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis') {
-      steps {
-        sh '''
-          # Create sonar-project.properties file
-          echo "sonar.projectKey=student-backend" > $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.projectName=Student Backend" >> $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.sources=." >> $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.exclusions=node_modules/**,coverage/**,__tests__/**" >> $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.tests=__tests__" >> $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.test.inclusions=**/*.test.js" >> $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.sourceEncoding=UTF-8" >> $WORKSPACE/Day-09/backend/sonar-project.properties
-          echo "sonar.javascript.lcov.reportPaths=coverage/lcov.info" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+stage('SonarQube Analysis') {
+  steps {
+    sh '''
+      echo "sonar.projectKey=student-backend" > $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.projectName=Student Backend" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.sources=." >> $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.exclusions=node_modules/**,coverage/**,__tests__/**" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.tests=__tests__" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.test.inclusions=**/*.test.js" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.sourceEncoding=UTF-8" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+      echo "sonar.javascript.lcov.reportPaths=coverage/lcov.info" >> $WORKSPACE/Day-09/backend/sonar-project.properties
 
-          # Run SonarScanner with token from Jenkins credentials
-          cd $WORKSPACE/Day-09/backend
+      cd $WORKSPACE/Day-09/backend
 
-          # Set the embedded JRE usage to false in sonar-scanner script
-          sed -i 's/use_embedded_jre=true/use_embedded_jre=false/' /opt/sonar-scanner/bin/sonar-scanner
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      export PATH=$JAVA_HOME/bin:$PATH
 
-          # Run with explicit Java 17 for SonarQube compatibility
-          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          export PATH=$JAVA_HOME/bin:$PATH
+      java -version
+      /opt/sonar-scanner/bin/sonar-scanner \
+        -Dsonar.host.url=http://35.88.114.65:9000 \
+        -Dsonar.token=$SONAR_TOKEN
+    '''
+  }
+  environment {
+    SONAR_TOKEN = credentials('sonar-token')
+  }
+}
 
-          java -version
-          /opt/sonar-scanner/bin/sonar-scanner \
-            -Dsonar.host.url=http://sonarqube:9000 \
-            -Dsonar.token=$SONAR_TOKEN
-        '''
-      }
-      environment {
-        SONAR_TOKEN = credentials('sonar-token')
-      }
-    }
 
     stage('Build and Scan Images') {
       steps {

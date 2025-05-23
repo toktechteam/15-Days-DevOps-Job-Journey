@@ -30,17 +30,17 @@ By the end of this Day-09 demo, you will have hands-on experience with:
 
 | Component | Requirement | Reasoning |
 |-----------|-------------|-----------|
-| **Instance Type** | `t3a.large` | Cost-effective with burstable CPU for CI/CD workloads |
-| **vCPUs** | 2 | Sufficient for parallel pipeline execution |
-| **Memory** | 8GB RAM | Required for SonarQube, Jenkins, and Docker operations |
+| **Instance Type** | `t3a.xlarge` | Required for Jenkins on host + SonarQube container |
+| **vCPUs** | 4 | Sufficient for parallel pipeline execution |
+| **Memory** | 16GB RAM | Required for Jenkins, SonarQube, and Docker operations |
 | **Storage** | 30GB EBS gp3 | Adequate for Docker images and build artifacts |
 | **Network** | Enhanced networking | Better throughput for image pulls/pushes |
 
 ### 💰 Cost Analysis (ap-south-1 region)
 
-- **Hourly Cost**: ~₹9.00/hour (~$0.108/hour)
-- **Daily Cost**: ~₹216/day for 24-hour usage
-- **Educational Cost**: ~₹54/day for 6-hour learning sessions
+- **Hourly Cost**: ~₹18.00/hour (~$0.216/hour)
+- **Daily Cost**: ~₹432/day for 24-hour usage
+- **Educational Cost**: ~₹108/day for 6-hour learning sessions
 
 ### Required Ports
 
@@ -58,20 +58,20 @@ By the end of this Day-09 demo, you will have hands-on experience with:
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Developer     │    │   Jenkins       │    │   Docker Hub    │
-│                 │───▶│   Pipeline      │───▶│   Registry      │
+│                 │───▶│   (EC2 Host)    │───▶│   Registry      │
 │   Git Push      │    │                 │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
                        ┌─────────────────┐
                        │   SonarQube     │
-                       │   Quality Gate  │
+                       │   (Container)   │
                        └─────────────────┘
                               │
                               ▼
                        ┌─────────────────┐
                        │   Trivy         │
-                       │   Security Scan │
+                       │   (EC2 Host)    │
                        └─────────────────┘
 ```
 
@@ -79,23 +79,23 @@ By the end of this Day-09 demo, you will have hands-on experience with:
 
 ## 🛠️ Quick Setup Options
 
-### Option 1: Automated Setup (Recommended for Beginners)
+### Option 1: Automated Setup (Recommended)
 
 Use our pre-configured script for instant setup:
 
 ```bash
 # Download and run the automated setup script
-wget https://raw.githubusercontent.com/toktechteam/15-Days-DevOps-Job-Journey/main/Day-09/setup.sh
-chmod +x setup.sh
-./setup.sh
+wget https://raw.githubusercontent.com/toktechteam/15-Days-DevOps-Job-Journey/main/Day-09/setup_script.sh
+chmod +x setup_script.sh
+./setup_script.sh
 ```
 
-The `setup.sh` script automatically:
+The `setup_script.sh` script automatically:
 - Installs all required dependencies (Java 17, Docker, Node.js, etc.)
-- Sets up Jenkins with pre-configured plugins
-- Configures SonarQube with PostgreSQL backend
-- Installs Trivy for security scanning
-- Creates optimized Docker Compose environment
+- Installs Jenkins directly on EC2 host
+- Configures SonarQube with PostgreSQL backend in containers
+- Installs Trivy for security scanning on host
+- Sets up proper networking for Jenkins-SonarQube communication
 
 ### Option 2: Manual Setup (For Learning Each Step)
 
@@ -111,7 +111,7 @@ Follow the step-by-step instructions below to understand each component.
 |---------|-------|
 | **Name** | devops-day09-demo |
 | **AMI** | Amazon Linux 2023 (ami-0953476d60561c955) |
-| **Instance Type** | t3a.large |
+| **Instance Type** | t3a.xlarge |
 | **Key Pair** | Create new keypair and download .pem file |
 | **Security Group** | Allow SSH (22), HTTP (80), Custom TCP (8081, 9000) |
 
@@ -130,8 +130,7 @@ sudo yum update -y
 # Install essential tools
 sudo yum install -y curl-minimal wget git jq unzip tar
 
-
-# Install Java 17 (Required for SonarQube compatibility)
+# Install Java 17 (Required for Jenkins and SonarQube)
 sudo yum install -y java-17-amazon-corretto-headless
 
 # Install Node.js (Required for application builds)
@@ -167,7 +166,31 @@ exit
 # SSH back in
 ```
 
-### Step 4: Install Security Scanning Tools
+### Step 4: Install Jenkins on EC2 Host
+
+```bash
+# Add Jenkins repository
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+# Install Jenkins
+sudo yum install jenkins -y
+
+# Configure Jenkins to use Java 17
+echo 'JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto.x86_64' | sudo tee -a /etc/sysconfig/jenkins
+
+# Set Jenkins to run on port 8081
+sudo sed -i 's/JENKINS_PORT="8080"/JENKINS_PORT="8081"/g' /etc/sysconfig/jenkins
+
+# Start and enable Jenkins
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+
+# Get Jenkins initial password
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+### Step 5: Install Security Scanning Tools
 
 ```bash
 # Install Trivy for container vulnerability scanning
@@ -179,7 +202,7 @@ sudo rpm -ivh trivy_*_Linux-64bit.rpm
 trivy --version
 ```
 
-### Step 5: Install SonarQube Scanner
+### Step 6: Install SonarQube Scanner
 
 ```bash
 # Install SonarScanner
@@ -197,26 +220,56 @@ source /etc/profile.d/sonar-scanner.sh
 sonar-scanner --version
 ```
 
-### Step 6: Deploy Jenkins & SonarQube with Docker Compose
+### Step 7: Deploy SonarQube with Docker Compose
 
 ```bash
 # Create project directory
 mkdir -p ~/devops-demo
 cd ~/devops-demo
 
-# The setup.sh script creates optimized Docker files
-# For manual setup, use the configurations from our repository
-git clone https://github.com/toktechteam/15-Days-DevOps-Job-Journey.git
-cp 15-Days-DevOps-Job-Journey/Day-09/docker-compose.yml .
-cp 15-Days-DevOps-Job-Journey/Day-09/Dockerfile.jenkins .
-cp 15-Days-DevOps-Job-Journey/Day-09/plugins.txt .
+# Create Docker Compose file for SonarQube
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  sonarqube:
+    image: sonarqube:latest
+    network_mode: "host"
+    environment:
+      - SONAR_WEB_PORT=9000
+      - SONAR_JDBC_URL=jdbc:postgresql://localhost:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    depends_on:
+      - sonardb
+
+  sonardb:
+    image: postgres:13
+    network_mode: "host"
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+      - POSTGRES_PORT=5432
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  postgresql_data:
+EOF
 
 # Configure system for SonarQube (ElasticSearch requirement)
 echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 
-# Build and start services
-docker-compose build
+# Start SonarQube
 docker-compose up -d
 
 # Monitor startup progress
@@ -229,16 +282,15 @@ docker-compose logs -f
 
 ### 1. Access Jenkins (Port 8081)
 
-```bash
-# Get Jenkins initial admin password
-docker-compose exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-```
-
 Navigate to `http://<EC2-PUBLIC-IP>:8081` and complete setup:
+- Use the initial admin password from earlier step
 - Install suggested plugins
+- **Additionally install these required plugins**:
+   - **SonarQube Scanner** - For code quality analysis
+   - **HTML Publisher** - For publishing test coverage reports
+   - **Docker Pipeline** - For Docker operations in pipeline
 - Create admin user
 - Configure Jenkins URL
-- Install plugin `Cobertura`
 
 ### 2. Access SonarQube (Port 9000)
 
@@ -255,10 +307,9 @@ In Jenkins Dashboard:
 2. Find **SonarQube servers** section
 3. Add SonarQube server:
    - Name: `SonarLocal`
-   - Server URL: `http://sonarqube:9000`
-   - Authentication: Use token from SonarQube
-   - Create cred. for sonar auth name it `sonar-token`
-   - Use the same token which is created in sonar
+   - Server URL: `http://localhost:9000`
+   - Authentication: Add credentials (Secret text) with SonarQube token
+   - Credential ID: `sonar-token`
 
 ### 4. Setup Docker Hub Credentials
 
@@ -289,8 +340,9 @@ In Jenkins:
 3. In **Pipeline** section, choose **Pipeline script from SCM**
 4. Set SCM to **Git**
 5. Repository URL: `https://github.com/toktechteam/15-Days-DevOps-Job-Journey.git`
-6. Branch: `*/main`
-7. Script Path: `Day-09/Jenkinsfile`
+6. Credentials: Select `github_cred`
+7. Branch: `*/main`
+8. Script Path: `Day-09/Jenkinsfile`
 
 ### 2. Pipeline Stages Explanation
 
@@ -334,41 +386,33 @@ Each successful build creates:
 
 ---
 
-## 🎓 Learning Exercises
-
-### Exercise 1: Pipeline Customization
-Modify the Jenkinsfile to add a new stage that runs ESLint for code style checking.
-
-### Exercise 2: Quality Gate Configuration
-Configure SonarQube quality gates to fail builds if code coverage drops below 80%.
-
-### Exercise 3: Multi-Environment Deployment
-Extend the pipeline to deploy to staging and production environments with approval gates.
-
-### Exercise 4: Notification Integration
-Add Slack or email notifications for build success/failure.
-
----
-
 ## 🔍 Troubleshooting Guide
 
 ### Common Issues & Solutions
 
 **Jenkins Won't Start**
 ```bash
-# Check Jenkins container logs
-docker-compose logs jenkins
+# Check Jenkins status
+sudo systemctl status jenkins
 
-# Verify Java version in container
-docker-compose exec jenkins java -version
+# Check Jenkins logs
+sudo journalctl -u jenkins -f
+
+# Restart Jenkins
+sudo systemctl restart jenkins
 ```
 
-**SonarQube Memory Issues**
+**SonarQube Connection Issues**
 ```bash
-# Verify vm.max_map_count setting
-sysctl vm.max_map_count
+# Check SonarQube container logs
+cd ~/devops-demo
+docker-compose logs sonarqube
 
-# Should return 262144 or higher
+# Test connection from Jenkins host
+curl http://localhost:9000
+
+# Restart SonarQube
+docker-compose restart sonarqube
 ```
 
 **Docker Permission Errors**
@@ -387,8 +431,8 @@ exit
 # Test Trivy installation
 trivy image alpine:latest
 
-# Check if Trivy is mounted correctly in Jenkins container
-docker-compose exec jenkins which trivy
+# Check if Jenkins can access Trivy
+sudo -u jenkins trivy --version
 ```
 
 ---
@@ -423,9 +467,10 @@ docker-compose exec jenkins which trivy
 
 ## 📝 Next Steps
 
-After completing Day-09, you'll be ready to build deployment pipelines that can deploy your containerized applications to different environments using the Docker images created by this CI/CD pipeline.
+After completing Day-09, you'll be ready for **Day-10** where you'll build deployment pipelines using the same Jenkins setup to deploy your containerized applications to different environments.
+
+**Day-10 will use this existing Jenkins installation - no additional setup required!**
 
 ---
 
-
-**🎉 Congratulations!** You've successfully built a production-ready CI/CD pipeline that demonstrates industry-standard DevOps practices. This foundation will serve you well in real-world scenarios and advanced DevOps implementations.
+**🎉 Congratulations!** You've successfully built a production-ready CI/CD pipeline with Jenkins on EC2 host and SonarQube in containers. This foundation will serve you well for Day-10 deployment pipelines and real-world scenarios.
