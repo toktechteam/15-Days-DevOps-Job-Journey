@@ -1,0 +1,154 @@
+pipeline {
+  agent any
+
+  environment {
+    DOCKER_USERNAME = "toktechteam"
+    BACKEND_IMAGE = "${DOCKER_USERNAME}/student-backend"
+    FRONTEND_IMAGE = "${DOCKER_USERNAME}/student-frontend"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout([
+          $class: 'GitSCM',
+          branches: [[name: '*/main']],
+          userRemoteConfigs: [[
+            credentialsId: 'github_cred',
+            url: 'https://github.com/toktechteam/15-Days-DevOps-Job-Journey.git'
+          ]]
+        ])
+      }
+    }
+
+    stage('Install Dependencies') {
+      steps {
+        sh '''
+          mkdir -p $WORKSPACE/Day-09/.npm-cache
+          cd $WORKSPACE/Day-09/backend && npm install --cache=$WORKSPACE/Day-09/.npm-cache
+
+          # Add Jest testing config
+          echo 'module.exports = {
+            coverageReporters: ["lcov", "text", "cobertura"]
+          };' > $WORKSPACE/Day-09/backend/jest.config.js
+        '''
+      }
+    }
+
+    stage('Run Tests') {
+      steps {
+        sh '''
+          cd $WORKSPACE/Day-09/backend
+          npm test -- --coverage --config=jest.config.js
+        '''
+
+        // Archive and publish reports
+        archiveArtifacts artifacts: 'Day-09/backend/coverage/**/*', fingerprint: true, allowEmptyArchive: true
+
+        // Publish coverage reports
+        publishHTML([
+          allowMissing: true,
+          alwaysLinkToLastBuild: true,
+          keepAll: true,
+          reportDir: 'Day-09/backend/coverage/lcov-report',
+          reportFiles: 'index.html',
+          reportName: 'Code Coverage Report'
+        ])
+
+        // Publish Cobertura if plugin is available
+        catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+          cobertura coberturaReportFile: 'Day-09/backend/coverage/cobertura-coverage.xml'
+        }
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      steps {
+        sh '''
+          # Create sonar-project.properties file
+          echo "sonar.projectKey=student-backend" > $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.projectName=Student Backend" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.sources=." >> $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.exclusions=node_modules/**,coverage/**,__tests__/**" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.tests=__tests__" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.test.inclusions=**/*.test.js" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.sourceEncoding=UTF-8" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+          echo "sonar.javascript.lcov.reportPaths=coverage/lcov.info" >> $WORKSPACE/Day-09/backend/sonar-project.properties
+
+          # Run SonarScanner with token from Jenkins credentials
+          cd $WORKSPACE/Day-09/backend
+
+          # Set the embedded JRE usage to false in sonar-scanner script
+          sed -i 's/use_embedded_jre=true/use_embedded_jre=false/' /opt/sonar-scanner/bin/sonar-scanner
+
+          # Run with explicit Java 17 for SonarQube compatibility
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+
+          java -version
+          /opt/sonar-scanner/bin/sonar-scanner \
+            -Dsonar.host.url=http://sonarqube:9000 \
+            -Dsonar.token=$SONAR_TOKEN
+        '''
+      }
+      environment {
+        SONAR_TOKEN = credentials('sonar-token')
+      }
+    }
+
+    stage('Build and Scan Images') {
+      steps {
+        sh '''
+          # Build backend image
+          cd $WORKSPACE
+          docker build -t $BACKEND_IMAGE:latest -f $WORKSPACE/Day-09/docker/Dockerfile.backend $WORKSPACE/Day-09
+
+          # Build frontend image
+          docker build -t $FRONTEND_IMAGE:latest -f $WORKSPACE/Day-09/docker/Dockerfile.frontend $WORKSPACE/Day-09
+
+          # Create reports directory
+          mkdir -p $WORKSPACE/Day-09/reports
+
+          # Scan images with Trivy
+          trivy image $BACKEND_IMAGE:latest --format json --output $WORKSPACE/Day-09/reports/trivy-backend-report.json || echo "Trivy scan completed with warnings"
+          trivy image $FRONTEND_IMAGE:latest --format json --output $WORKSPACE/Day-09/reports/trivy-frontend-report.json || echo "Trivy scan completed with warnings"
+        '''
+
+        // Archive reports
+        archiveArtifacts artifacts: 'Day-09/reports/**/*', fingerprint: true, allowEmptyArchive: true
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push $BACKEND_IMAGE:latest
+            docker push $FRONTEND_IMAGE:latest
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      cleanWs(patterns: [[pattern: 'Day-09/.npm-cache/**', type: 'INCLUDE']])
+
+      sh '''
+        docker rmi $BACKEND_IMAGE:latest || true
+        docker rmi $FRONTEND_IMAGE:latest || true
+        docker system prune -f --volumes || true
+      '''
+    }
+
+    success {
+      echo 'Pipeline executed successfully!'
+    }
+
+    failure {
+      echo 'Pipeline execution failed!'
+    }
+  }
+}

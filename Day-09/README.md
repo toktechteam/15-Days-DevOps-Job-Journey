@@ -151,6 +151,7 @@ sudo yum install -y docker
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -aG docker ec2-user
+sudo chmod 777 /var/run/docker.sock
 
 # Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -237,6 +238,7 @@ Navigate to `http://<EC2-PUBLIC-IP>:8081` and complete setup:
 - Install suggested plugins
 - Create admin user
 - Configure Jenkins URL
+- Install plugin `Cobertura`
 
 ### 2. Access SonarQube (Port 9000)
 
@@ -255,6 +257,8 @@ In Jenkins Dashboard:
    - Name: `SonarLocal`
    - Server URL: `http://sonarqube:9000`
    - Authentication: Use token from SonarQube
+   - Create cred. for sonar auth name it `sonar-token`
+   - Use the same token which is created in sonar
 
 ### 4. Setup Docker Hub Credentials
 

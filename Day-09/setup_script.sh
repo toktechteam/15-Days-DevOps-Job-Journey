@@ -14,6 +14,7 @@ sudo yum install -y docker
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -a -G docker ec2-user
+sudo chmod 777 /var/run/docker.sock
 
 # Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -103,7 +104,9 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/local/bin/sonar-scanner:/usr/local/bin/sonar-scanner
+      - /opt/sonar-scanner:/opt/sonar-scanner
+      - /usr/bin/trivy:/usr/bin/trivy
+      - /usr/lib/jvm/java-17-amazon-corretto:/usr/lib/jvm/java-17-amazon-corretto
     environment:
       - JAVA_OPTS=-Dhudson.model.DirectoryBrowserSupport.CSP=
     networks:
