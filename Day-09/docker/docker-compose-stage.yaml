@@ -13,7 +13,7 @@ services:
       - "3308:3306"
     volumes:
       - mysql-data-staging:/var/lib/mysql
-      - ./setup_script.sh:/docker-entrypoint-initdb.d/setup_script.sh
+      - .//setup.sql:/docker-entrypoint-initdb.d/setup.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
       interval: 10s
