@@ -1,5 +1,5 @@
 // API Base URL - UPDATED to match your specific server
-const API_URL = 'http://44.234.32.100:3000/api/students';
+const API_URL = 'http://35.88.114.65:3000/api/students';
 
 // DOM Elements
 const studentForm = document.getElementById('student-form');
