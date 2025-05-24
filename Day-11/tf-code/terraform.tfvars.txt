@@ -1,0 +1,80 @@
+# =============================================================================
+# Terraform Variables Configuration File (terraform.tfvars)
+# =============================================================================
+# This file contains the actual values for variables defined in variables.tf
+# Students can modify these values to customize their deployment
+
+# -----------------------------------------------------------------------------
+# AWS Configuration
+# -----------------------------------------------------------------------------
+aws_region = "us-east-1"  # Change to your preferred region
+
+# -----------------------------------------------------------------------------
+# Environment Configuration  
+# -----------------------------------------------------------------------------
+environment = "dev"  # Options: dev, staging, prod
+project_name = "devops-demo"
+
+# -----------------------------------------------------------------------------
+# Contact Information
+# -----------------------------------------------------------------------------
+owner_email = "your-email@example.com"  # Replace with your email
+
+# -----------------------------------------------------------------------------
+# Instance Configuration
+# -----------------------------------------------------------------------------
+instance_type = "t3.micro"  # Free tier eligible
+root_volume_size = 20
+enable_detailed_monitoring = true
+
+# -----------------------------------------------------------------------------
+# Security Configuration
+# -----------------------------------------------------------------------------
+# WARNING: 0.0.0.0/0 allows SSH from anywhere - restrict this in production!
+# Replace with your IP: "YOUR_IP/32"
+allowed_ssh_cidr = "0.0.0.0/0"
+enable_ssh_access = true
+
+# -----------------------------------------------------------------------------
+# Storage Configuration
+# -----------------------------------------------------------------------------
+enable_s3_versioning = true
+s3_encryption_algorithm = "AES256"
+
+# -----------------------------------------------------------------------------
+# Application Configuration
+# -----------------------------------------------------------------------------
+app_port = 3000
+
+# -----------------------------------------------------------------------------
+# Advanced Configuration
+# -----------------------------------------------------------------------------
+create_demo_files = 3
+enable_cloudwatch_logs = false
+
+# -----------------------------------------------------------------------------
+# Environment-Specific Examples
+# -----------------------------------------------------------------------------
+# Uncomment and modify as needed for different environments:
+
+# For Development Environment
+# aws_region = "us-east-1"
+# environment = "dev"
+# instance_type = "t3.micro"
+# enable_detailed_monitoring = false
+# enable_cloudwatch_logs = false
+
+# For Staging Environment
+# aws_region = "us-west-2"
+# environment = "staging"
+# instance_type = "t3.small"
+# enable_detailed_monitoring = true
+# enable_cloudwatch_logs = true
+
+# For Production Environment
+# aws_region = "eu-west-1"
+# environment = "prod"
+# instance_type = "t3.medium"
+# enable_detailed_monitoring = true
+# enable_cloudwatch_logs = true
+# allowed_ssh_cidr = "10.0.0.0/8"  # Restrict to internal network
