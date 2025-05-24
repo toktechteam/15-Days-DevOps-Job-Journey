@@ -1,200 +1,151 @@
 #!/bin/bash
-# =============================================================================
-# User Data Script for Day-11 Terraform Demo
-# =============================================================================
-# This script runs when the EC2 instance first boots up
-# It installs basic tools and prepares the instance for DevOps demonstrations
 
-# Log all output
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
 
-echo "=== Starting User Data Script ==="
-echo "Environment: ${environment}"
-echo "Timestamp: $(date)"
-
-# Update the system
-echo "=== Updating system packages ==="
+echo "=== Starting TheOpsKart EC2 App Setup ==="
 yum update -y
 
-# Install essential tools
-echo "=== Installing essential tools ==="
-yum install -y \
-    git \
-    wget \
-    curl \
-    unzip \
-    htop \
-    tree \
-    vim \
-    nano \
-    jq \
-    awscli
-
-# Install Docker (for future use in upcoming days)
-echo "=== Installing Docker ==="
-yum install -y docker
+echo "=== Installing Docker and Git ==="
+yum install -y docker git
 systemctl start docker
 systemctl enable docker
-usermod -a -G docker ec2-user
+usermod -aG docker ec2-user
 
-# Install Docker Compose (for future use)
-echo "=== Installing Docker Compose ==="
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+echo "=== Setting Up Application ==="
+mkdir -p /home/ec2-user/theopskart-app
+cd /home/ec2-user/theopskart-app
 
-# Install Node.js (for our application)
-echo "=== Installing Node.js ==="
-curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
-yum install -y nodejs
-
-# Create a simple web server for testing
-echo "=== Creating simple web server ==="
-mkdir -p /home/ec2-user/demo-app
-cat > /home/ec2-user/demo-app/server.js << 'EOF'
-const http = require('http');
-const os = require('os');
-
-const server = http.createServer((req, res) => {
-    const response = {
-        message: 'Hello from Terraform-created EC2 instance!',
-        environment: process.env.ENVIRONMENT || 'unknown',
-        hostname: os.hostname(),
-        timestamp: new Date().toISOString(),
-        uptime: os.uptime(),
-        platform: os.platform(),
-        version: process.version
-    };
-    
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(response, null, 2));
-});
-
-const PORT = 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-EOF
-
-# Set environment variable
-echo "export ENVIRONMENT=${environment}" >> /home/ec2-user/.bashrc
-
-# Change ownership
-chown -R ec2-user:ec2-user /home/ec2-user/demo-app
-
-# Create systemd service for the demo app
-cat > /etc/systemd/system/demo-app.service << EOF
-[Unit]
-Description=Demo Node.js Application
-After=network.target
-
-[Service]
-Type=simple
-User=ec2-user
-WorkingDirectory=/home/ec2-user/demo-app
-ExecStart=/usr/bin/node server.js
-Restart=on-failure
-Environment=ENVIRONMENT=${environment}
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable and start the demo app
-systemctl daemon-reload
-systemctl enable demo-app
-systemctl start demo-app
-
-# Install nginx as reverse proxy
-echo "=== Installing and configuring Nginx ==="
-yum install -y nginx
-
-# Configure nginx to proxy to our Node.js app
-cat > /etc/nginx/conf.d/demo-app.conf << 'EOF'
-server {
-    listen 80;
-    server_name _;
-    
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-    
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
+cat > package.json << 'EOF'
+{
+  "name": "theopskart-ec2-app",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
 }
 EOF
 
-# Start nginx
-systemctl start nginx
-systemctl enable nginx
+cat > server.js << 'EOF'
+const express = require('express');
+const os = require('os');
 
-# Create a welcome message
-cat > /home/ec2-user/README.md << EOF
-# Day-11 Terraform Demo Instance
+const app = express();
+const PORT = 3000;
 
-This EC2 instance was created by Terraform as part of the DevOps learning journey.
+app.use(express.static('public'));
 
-## What's Installed
-- Docker and Docker Compose
-- Node.js 18
-- Nginx (reverse proxy)
-- AWS CLI
-- Common development tools
+app.get('/api/info', (req, res) => {
+  res.json({
+    message: 'Hello from Terraform EC2 Instance! This is Day-11 Session Happy Learning with TheOpskart',
+    hostname: os.hostname(),
+    platform: os.platform(),
+    timestamp: new Date().toISOString()
+  });
+});
 
-## Demo Application
-A simple Node.js application is running on port 3000 and proxied through Nginx on port 80.
-
-- Application: http://localhost:3000
-- Web (via Nginx): http://localhost:80
-- Health check: http://localhost/health
-
-## Services
-- demo-app.service: Node.js application
-- nginx.service: Web server/reverse proxy
-- docker.service: Docker daemon
-
-## Commands to Try
-\`\`\`bash
-# Check service status
-sudo systemctl status demo-app
-sudo systemctl status nginx
-
-# View logs
-sudo journalctl -u demo-app -f
-sudo tail -f /var/log/nginx/access.log
-
-# Test the application
-curl http://localhost
-curl http://localhost/health
-
-# Docker commands
-docker --version
-docker-compose --version
-\`\`\`
-
-Environment: ${environment}
-Created: $(date)
+app.listen(PORT, () => {
+  console.log(`✅ App running at http://localhost:${PORT}`);
+});
 EOF
 
-chown ec2-user:ec2-user /home/ec2-user/README.md
+mkdir -p public
+cat > public/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TheOpsKart EC2</title>
+  <style>
+    body {
+      background-color: #002b5c;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .message {
+      font-size: 1.6rem;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    .table-container {
+      background-color: #003f88;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 1rem;
+      min-width: 400px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #0050c1;
+    }
+    td:first-child {
+      font-weight: bold;
+      color: #99ccff;
+      width: 40%;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="message">🚀 TheOpsKart EC2 is Live!</div>
+  <div class="table-container">
+    <table id="infoTable">
+      <tr><td>Message</td><td>Loading...</td></tr>
+      <tr><td>Hostname</td><td>Loading...</td></tr>
+      <tr><td>Platform</td><td>Loading...</td></tr>
+      <tr><td>Timestamp</td><td>Loading...</td></tr>
+    </table>
+  </div>
 
-# Final status check
-echo "=== Final Status Check ==="
-systemctl is-active docker
-systemctl is-active nginx
-systemctl is-active demo-app
+  <script>
+    fetch('/api/info')
+      .then(res => res.json())
+      .then(data => {
+        const table = document.getElementById("infoTable");
+        table.innerHTML = `
+          <tr><td>Message</td><td>${data.message}</td></tr>
+          <tr><td>Hostname</td><td>${data.hostname}</td></tr>
+          <tr><td>Platform</td><td>${data.platform}</td></tr>
+          <tr><td>Timestamp</td><td>${new Date(data.timestamp).toLocaleString()}</td></tr>
+        `;
+      })
+      .catch(() => {
+        document.querySelector('.table-container').textContent = '❌ Failed to load server info.';
+      });
+  </script>
+</body>
+</html>
+EOF
 
-echo "=== User Data Script Completed Successfully ==="
-echo "Instance is ready for DevOps demonstrations!"
-echo "Check /home/ec2-user/README.md for more information."
+cat > Dockerfile << 'EOF'
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN npm install
+EXPOSE 3000
+CMD ["npm", "start"]
+EOF
+
+echo "=== Building and Running Docker Container ==="
+docker build -t theopskart-app .
+docker run -d -p 3000:3000 --name theopskart theopskart-app
+
+echo "🎉 App is live at port 3000!"
+echo "🌐 Visit: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000"
