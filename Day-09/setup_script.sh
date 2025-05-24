@@ -102,8 +102,86 @@ echo "📊 Setting up SonarQube with Docker..."
 mkdir -p ~/devops-demo
 cd ~/devops-demo
 
+# Install MariaDB on EC2 host (Amazon Linux 2023)
+echo "🗄️ Installing MariaDB on EC2 host..."
+sudo dnf install -y mariadb105-server
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
+
+# Secure MariaDB installation
+echo "⚙️ Configuring MariaDB..."
+sudo mysql -e "
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'Root@123456';
+CREATE DATABASE IF NOT EXISTS student_management;
+USE student_management;
+CREATE TABLE IF NOT EXISTS students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    course VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+INSERT IGNORE INTO students (name, email, course) VALUES
+('John Doe', 'john.doe@example.com', 'Computer Science'),
+('Jane Smith', 'jane.smith@example.com', 'Information Technology'),
+('Mike Johnson', 'mike.johnson@example.com', 'Software Engineering');
+FLUSH PRIVILEGES;
+"
+
+echo "MariaDB setup complete. Root password: Root@123456"
+
+# Create SonarQube setup
+echo "📊 Setting up SonarQube with Docker..."
+mkdir -p ~/devops-demo
+cd ~/devops-demo
+
 # Create docker-compose.yml for SonarQube
 cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    depends_on:
+      - sonardb
+    networks:
+      - sonar-network
+
+  sonardb:
+    image: postgres:13
+    container_name: sonardb
+    restart: always
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - sonar-network
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  postgresql_data:
+
+networks:
+  sonar-network:
+    driver: bridge
+EOF
 version: '3.8'
 
 services:

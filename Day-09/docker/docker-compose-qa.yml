@@ -1,27 +1,6 @@
 version: '3.8'
 
 services:
-  # MySQL Database
-  mysql:
-    image: mysql:8.0
-    container_name: student-management-db-qa
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: student_management
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql-data-qa:/var/lib/mysql
-      - .//setup.sql:/docker-entrypoint-initdb.d/setup.sql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - student-network-qa
-
   # Backend Service
   backend:
     image: toktechteam/student-backend:latest
@@ -31,16 +10,12 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=production
-      - DB_HOST=mysql
+      - DB_HOST=localhost
       - DB_USER=root
-      - DB_PASSWORD=root_password
+      - DB_PASSWORD=Root@123456
       - DB_NAME=student_management
       - PORT=3000
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - student-network-qa
+    network_mode: "host"
 
   # Frontend Service
   frontend:
@@ -54,12 +29,4 @@ services:
       - REACT_APP_ENV=production
     depends_on:
       - backend
-    networks:
-      - student-network-qa
-
-volumes:
-  mysql-data-qa:
-
-networks:
-  student-network-qa:
-    driver: bridge
+    network_mode: "host"
