@@ -29,13 +29,50 @@ pipeline {
         BACKEND_IMAGE = "${DOCKER_HUB_USERNAME}/student-backend:${params.BACKEND_TAG}"
         FRONTEND_IMAGE = "${DOCKER_HUB_USERNAME}/student-frontend:${params.FRONTEND_TAG}"
         COMPOSE_FILE = "docker-compose-${params.ENVIRONMENT}.yml"
+        DOCKER_DIR = "${WORKSPACE}/Day-09/docker"
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                echo "🔄 Checking out code to get docker-compose files..."
-                checkout scm
+                echo "🔄 Checking out code from repository..."
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        credentialsId: 'github_cred',
+                        url: 'https://github.com/toktechteam/15-Days-DevOps-Job-Journey.git'
+                    ]]
+                ])
+
+                echo "✅ Code checked out successfully"
+                sh "ls -la ${WORKSPACE}"
+            }
+        }
+
+        stage('Verify Setup') {
+            steps {
+                script {
+                    echo "🔍 Verifying docker-compose files exist..."
+                    sh '''
+                        echo "Workspace: ${WORKSPACE}"
+                        echo "Docker directory: ${DOCKER_DIR}"
+
+                        if [ ! -d "${DOCKER_DIR}" ]; then
+                            echo "❌ Docker directory not found: ${DOCKER_DIR}"
+                            exit 1
+                        fi
+
+                        if [ ! -f "${DOCKER_DIR}/${COMPOSE_FILE}" ]; then
+                            echo "❌ Compose file not found: ${DOCKER_DIR}/${COMPOSE_FILE}"
+                            echo "Available files in docker directory:"
+                            ls -la ${DOCKER_DIR}/
+                            exit 1
+                        fi
+
+                        echo "✅ Setup verified - ${COMPOSE_FILE} found"
+                    '''
+                }
             }
         }
 
@@ -44,7 +81,14 @@ pipeline {
                 script {
                     echo "📝 Updating image tags in ${COMPOSE_FILE}..."
                     sh '''
-                        cd docker
+                        cd ${DOCKER_DIR}
+
+                        echo "Current directory: $(pwd)"
+                        echo "Updating compose file: ${COMPOSE_FILE}"
+
+                        # Show current image lines
+                        echo "📄 Current image tags:"
+                        grep "image: ${DOCKER_HUB_USERNAME}" ${COMPOSE_FILE} || echo "No existing images found"
 
                         # Update backend image tag
                         sed -i "s|image: ${DOCKER_HUB_USERNAME}/student-backend:.*|image: ${BACKEND_IMAGE}|g" ${COMPOSE_FILE}
@@ -57,6 +101,7 @@ pipeline {
                         echo "Frontend: ${FRONTEND_IMAGE}"
 
                         # Show updated lines
+                        echo "📄 New image tags:"
                         grep "image: ${DOCKER_HUB_USERNAME}" ${COMPOSE_FILE}
                     '''
                 }
@@ -68,13 +113,22 @@ pipeline {
                 script {
                     echo "🚀 Deploying ${params.ENVIRONMENT} environment..."
                     sh '''
-                        cd docker
+                        cd ${DOCKER_DIR}
+
+                        echo "Working directory: $(pwd)"
+                        echo "Using compose file: ${COMPOSE_FILE}"
+
+                        # Show current container status
+                        echo "📊 Current container status:"
+                        docker-compose -f ${COMPOSE_FILE} ps || echo "No containers running yet"
 
                         # Stop and remove old application containers (keep DB running)
-                        docker-compose -f ${COMPOSE_FILE} stop frontend backend
-                        docker-compose -f ${COMPOSE_FILE} rm -f frontend backend
+                        echo "🛑 Stopping old application containers..."
+                        docker-compose -f ${COMPOSE_FILE} stop frontend backend || echo "No containers to stop"
+                        docker-compose -f ${COMPOSE_FILE} rm -f frontend backend || echo "No containers to remove"
 
                         # Start application containers with new images
+                        echo "🚀 Starting application containers..."
                         docker-compose -f ${COMPOSE_FILE} up -d frontend backend
 
                         # Wait for services to start
@@ -82,6 +136,7 @@ pipeline {
                         sleep 20
 
                         # Show container status
+                        echo "📊 Final container status:"
                         docker-compose -f ${COMPOSE_FILE} ps
                     '''
                 }
@@ -93,31 +148,53 @@ pipeline {
                 script {
                     echo "🏥 Running health checks..."
                     sh '''
-                        cd docker
+                        cd ${DOCKER_DIR}
 
                         # Get backend port based on environment
                         if [ "${ENVIRONMENT}" = "dev" ]; then
                             BACKEND_PORT=3000
+                            FRONTEND_PORT=8080
                         elif [ "${ENVIRONMENT}" = "qa" ]; then
                             BACKEND_PORT=3001
+                            FRONTEND_PORT=8082
                         else
                             BACKEND_PORT=3002
+                            FRONTEND_PORT=8083
                         fi
+
+                        echo "Environment: ${ENVIRONMENT}"
+                        echo "Backend port: ${BACKEND_PORT}"
+                        echo "Frontend port: ${FRONTEND_PORT}"
 
                         # Check backend health
                         echo "Checking backend health on port ${BACKEND_PORT}..."
                         for i in {1..10}; do
                             if curl -f http://localhost:${BACKEND_PORT}/health 2>/dev/null; then
                                 echo "✅ Backend is healthy"
+                                BACKEND_HEALTHY=true
                                 break
                             fi
                             echo "⏳ Waiting for backend... (attempt $i/10)"
                             sleep 5
                         done
 
+                        # Check frontend accessibility
+                        echo "Checking frontend on port ${FRONTEND_PORT}..."
+                        if curl -f http://localhost:${FRONTEND_PORT} 2>/dev/null; then
+                            echo "✅ Frontend is accessible"
+                        else
+                            echo "⚠️ Frontend check failed, but continuing..."
+                        fi
+
                         # Show final status
                         echo "📊 Final Container Status:"
                         docker-compose -f ${COMPOSE_FILE} ps
+
+                        # Show container logs if backend is not healthy
+                        if [ "${BACKEND_HEALTHY}" != "true" ]; then
+                            echo "🔍 Backend logs (last 20 lines):"
+                            docker-compose -f ${COMPOSE_FILE} logs --tail=20 backend || echo "Could not get logs"
+                        fi
                     '''
                 }
             }
@@ -125,13 +202,13 @@ pipeline {
 
         stage('Smoke Tests') {
             when {
-                not { params.SKIP_TESTS }
+                expression { !params.SKIP_TESTS }
             }
             steps {
                 script {
                     echo "🧪 Running smoke tests..."
                     sh '''
-                        cd docker
+                        cd ${DOCKER_DIR}
 
                         # Get backend port
                         if [ "${ENVIRONMENT}" = "dev" ]; then
@@ -143,14 +220,50 @@ pipeline {
                         fi
 
                         # Test API endpoint
-                        echo "Testing API endpoint..."
+                        echo "Testing API endpoint on port ${BACKEND_PORT}..."
                         if curl -f "http://localhost:${BACKEND_PORT}/api/students" 2>/dev/null; then
                             echo "✅ API endpoint test passed"
                         else
                             echo "⚠️ API endpoint test failed but continuing..."
+                            echo "🔍 Checking if backend container is running:"
+                            docker-compose -f ${COMPOSE_FILE} ps backend
                         fi
 
                         echo "✅ Smoke tests completed"
+                    '''
+                }
+            }
+        }
+
+        stage('Deployment Summary') {
+            steps {
+                script {
+                    sh '''
+                        cd ${DOCKER_DIR}
+
+                        # Get ports based on environment
+                        if [ "${ENVIRONMENT}" = "dev" ]; then
+                            BACKEND_PORT=3000
+                            FRONTEND_PORT=8081
+                        elif [ "${ENVIRONMENT}" = "qa" ]; then
+                            BACKEND_PORT=3001
+                            FRONTEND_PORT=8082
+                        else
+                            BACKEND_PORT=3002
+                            FRONTEND_PORT=8083
+                        fi
+
+                        echo "🎉 Deployment Summary:"
+                        echo "Environment: ${ENVIRONMENT}"
+                        echo "Backend Image: ${BACKEND_IMAGE}"
+                        echo "Frontend Image: ${FRONTEND_IMAGE}"
+                        echo ""
+                        echo "📊 Running Containers:"
+                        docker-compose -f ${COMPOSE_FILE} ps
+                        echo ""
+                        echo "🔗 Access URLs:"
+                        echo "Frontend: http://your-ec2-ip:${FRONTEND_PORT}"
+                        echo "Backend API: http://your-ec2-ip:${BACKEND_PORT}"
                     '''
                 }
             }
@@ -161,7 +274,7 @@ pipeline {
         success {
             script {
                 def ports = [
-                    'dev': [backend: '3000', frontend: '8080'],
+                    'dev': [backend: '3000', frontend: '8081'],
                     'qa': [backend: '3001', frontend: '8082'],
                     'staging': [backend: '3002', frontend: '8083']
                 ]
@@ -172,12 +285,25 @@ pipeline {
 Environment: ${params.ENVIRONMENT}
 Backend: ${BACKEND_IMAGE} → http://localhost:${ports[params.ENVIRONMENT].backend}
 Frontend: ${FRONTEND_IMAGE} → http://localhost:${ports[params.ENVIRONMENT].frontend}
+
+Workspace: ${WORKSPACE}
+Docker Directory: ${DOCKER_DIR}
 """
             }
         }
 
         failure {
-            echo "❌ Deployment Failed! Check logs for details."
+            script {
+                echo """
+❌ Deployment Failed!
+
+Environment: ${params.ENVIRONMENT}
+Workspace: ${WORKSPACE}
+Docker Directory: ${DOCKER_DIR}
+
+Check the logs above for detailed error information.
+"""
+            }
         }
     }
 }

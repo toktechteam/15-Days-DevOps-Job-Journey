@@ -62,7 +62,7 @@ docker-compose -f docker-compose-staging.yml up -d
 
 | Environment | Frontend URL | Backend API URL | Database Port |
 |-------------|--------------|-----------------|---------------|
-| **DEV**     | :8080        | :3000           | 3306          |
+| **DEV**     | :8081        | :3000           | 3306          |
 | **QA**      | :8082        | :3001           | 3307          |  
 | **STAGING** | :8083        | :3002           | 3308          |
 

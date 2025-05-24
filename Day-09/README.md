@@ -49,7 +49,9 @@ By the end of this Day-09 demo, you will have hands-on experience with:
 | 22 | SSH | Server management |
 | 8081 | Jenkins | CI/CD dashboard |
 | 9000 | SonarQube | Code quality analysis |
-| 80/443 | HTTP/HTTPS | Application access |
+| 3306 | MySQL | Database server |
+| 3000-3002 | Backend APIs | Application backend services |
+| 8080, 8082-8083 | Frontend Apps | Application frontend services |
 
 ---
 
@@ -286,9 +288,9 @@ Navigate to `http://<EC2-PUBLIC-IP>:8081` and complete setup:
 - Use the initial admin password from earlier step
 - Install suggested plugins
 - **Additionally install these required plugins**:
-   - **SonarQube Scanner** - For code quality analysis
-   - **HTML Publisher** - For publishing test coverage reports
-   - **Docker Pipeline** - For Docker operations in pipeline
+    - **SonarQube Scanner** - For code quality analysis
+    - **HTML Publisher** - For publishing test coverage reports
+    - **Docker Pipeline** - For Docker operations in pipeline
 - Create admin user
 - Configure Jenkins URL
 
@@ -306,28 +308,28 @@ In Jenkins Dashboard:
 1. **Manage Jenkins** → **Configure System**
 2. Find **SonarQube servers** section
 3. Add SonarQube server:
-   - Name: `SonarLocal`
-   - Server URL: `http://localhost:9000`
-   - Authentication: Add credentials (Secret text) with SonarQube token
-   - Credential ID: `sonar-token`
+    - Name: `SonarLocal`
+    - Server URL: `http://localhost:9000`
+    - Authentication: Add credentials (Secret text) with SonarQube token
+    - Credential ID: `sonar-token`
 
 ### 4. Setup Docker Hub Credentials
 
 In Jenkins:
 1. **Manage Jenkins** → **Manage Credentials**
 2. Add **Username with password**:
-   - ID: `docker-hub-creds`
-   - Username: Your Docker Hub username
-   - Password: Your Docker Hub password/token
+    - ID: `docker-hub-creds`
+    - Username: Your Docker Hub username
+    - Password: Your Docker Hub password/token
 
 ### 5. Setup GitHub Credentials
 
 In Jenkins:
 1. **Manage Jenkins** → **Manage Credentials**
 2. Add **Username with password**:
-   - ID: `github_cred`
-   - Username: Your GitHub username
-   - Password: Your GitHub Personal Access Token
+    - ID: `github_cred`
+    - Username: Your GitHub username
+    - Password: Your GitHub Personal Access Token
 
 ---
 

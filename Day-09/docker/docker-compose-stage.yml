@@ -4,29 +4,29 @@ services:
   # Backend Service
   backend:
     image: toktechteam/student-backend:latest
-    container_name: student-management-backend-staging
+    container_name: student-management-backend-stage
     restart: always
+    extra_hosts:
+      - "host.docker.internal:172.31.33.218"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=root_password
+      - DB_NAME=student_management
+      - PORT=3002
     ports:
       - "3002:3000"
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=localhost
-      - DB_USER=root
-      - DB_PASSWORD=Root@123456
-      - DB_NAME=student_management
-      - PORT=3000
-    network_mode: "host"
 
   # Frontend Service
   frontend:
     image: toktechteam/student-frontend:latest
-    container_name: student-management-frontend-staging
+    container_name: student-management-frontend-stage
     restart: always
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+      - REACT_APP_ENV=development
     ports:
       - "8083:8080"
-    environment:
-      - REACT_APP_API_URL=http://localhost:3002
-      - REACT_APP_ENV=production
     depends_on:
       - backend
-    network_mode: "host"

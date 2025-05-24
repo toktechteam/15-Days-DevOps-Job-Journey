@@ -111,7 +111,9 @@ sudo systemctl start mariadb
 # Secure MariaDB installation
 echo "⚙️ Configuring MariaDB..."
 sudo mysql -e "
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'Root@123456';
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'root_password';
+GRANT ALL PRIVILEGES ON student_management.* TO 'root'@'%' IDENTIFIED BY 'root_password';
+FLUSH PRIVILEGES;
 CREATE DATABASE IF NOT EXISTS student_management;
 USE student_management;
 CREATE TABLE IF NOT EXISTS students (
@@ -128,7 +130,7 @@ INSERT IGNORE INTO students (name, email, course) VALUES
 FLUSH PRIVILEGES;
 "
 
-echo "MariaDB setup complete. Root password: Root@123456"
+echo "MariaDB setup complete. Root password: root_password"
 
 # Create SonarQube setup
 echo "📊 Setting up SonarQube with Docker..."
@@ -137,51 +139,6 @@ cd ~/devops-demo
 
 # Create docker-compose.yml for SonarQube
 cat > docker-compose.yml << 'EOF'
-version: '3.8'
-
-services:
-  sonarqube:
-    image: sonarqube:latest
-    container_name: sonarqube
-    restart: always
-    ports:
-      - "9000:9000"
-    environment:
-      - SONAR_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
-      - SONAR_JDBC_USERNAME=sonar
-      - SONAR_JDBC_PASSWORD=sonar
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-    depends_on:
-      - sonardb
-    networks:
-      - sonar-network
-
-  sonardb:
-    image: postgres:13
-    container_name: sonardb
-    restart: always
-    environment:
-      - POSTGRES_USER=sonar
-      - POSTGRES_PASSWORD=sonar
-      - POSTGRES_DB=sonar
-    volumes:
-      - postgresql_data:/var/lib/postgresql/data
-    networks:
-      - sonar-network
-
-volumes:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
-  postgresql_data:
-
-networks:
-  sonar-network:
-    driver: bridge
-EOF
 version: '3.8'
 
 services:
