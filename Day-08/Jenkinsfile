@@ -5,18 +5,18 @@ pipeline {
     FRONTEND_IMAGE = "student-frontend"
   }
   stages {
-     stage('Checkout') {
-       steps {
-         echo '🔁 Checkout stage started'
-    //     checkout scm
-         echo '✅ Checkout complete'
-       }
-     }
+    stage('Checkout') {
+      steps {
+        echo '🔁 Checkout stage started'
+        // checkout scm
+        echo '✅ Checkout complete'
+      }
+    }
 
     stage('Install Dependencies') {
       steps {
         echo '📦 Installing backend dependencies...'
-    //    sh 'cd $WORKSPACE/backend && npm install && npm install --save-dev jest'
+        // sh 'cd $WORKSPACE/backend && npm install && npm install --save-dev jest'
         echo '✅ Dependencies installed successfully'
       }
     }
@@ -24,7 +24,7 @@ pipeline {
     stage('Run Tests') {
       steps {
         echo '🧪 Running Jest test cases...'
-     //   sh 'cd $WORKSPACE/backend/__tests__/ && npm test'
+        // sh 'cd $WORKSPACE/backend/__tests__/ && npm test'
         echo '✅ Test execution completed'
       }
     }
@@ -32,7 +32,7 @@ pipeline {
     stage('Build Backend Image') {
       steps {
         echo '🐳 Building Docker image for backend...'
-   //     sh 'docker build -t $BACKEND_IMAGE:latest -f $WORKSPACE/docker/Dockerfile.backend .'
+        // sh 'docker build -t $BACKEND_IMAGE:latest -f $WORKSPACE/docker/Dockerfile.backend .'
         echo '✅ Backend Docker image build complete'
       }
     }
@@ -40,7 +40,7 @@ pipeline {
     stage('Build Frontend Image') {
       steps {
         echo '🐳 Building Docker image for frontend...'
-    //    sh 'docker build -t $FRONTEND_IMAGE:latest -f $WORKSPACE/docker/Dockerfile.frontend .'
+        // sh 'docker build -t $FRONTEND_IMAGE:latest -f $WORKSPACE/docker/Dockerfile.frontend .'
         echo '✅ Frontend Docker image build complete'
       }
     }
@@ -48,26 +48,30 @@ pipeline {
     stage('Scan Both Images') {
       steps {
         echo '🔍 Scanning backend and frontend images with Trivy...'
-      //  sh '''
-      //    trivy image $BACKEND_IMAGE:latest || true
-      //    trivy image $FRONTEND_IMAGE:latest || true
-      //  '''
+        /*
+        sh '''
+          trivy image $BACKEND_IMAGE:latest || true
+          trivy image $FRONTEND_IMAGE:latest || true
+        '''
+        */
         echo '✅ Image scan completed (Trivy)'
       }
     }
 
-   stage('Push to Docker Hub') {
-       steps {
-         echo '🚀 Pushing images to Docker Hub...'
-       //  withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-       //    sh '''
-       //      echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-       //      docker push $BACKEND_IMAGE:latest
-       //       docker push $FRONTEND_IMAGE:latest
-       //    '''
-         }
-         echo '✅ Images pushed to Docker Hub'
-       }
-}
+    stage('Push to Docker Hub') {
+      steps {
+        echo '🚀 Pushing images to Docker Hub...'
+        /*
+        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push $BACKEND_IMAGE:latest
+            docker push $FRONTEND_IMAGE:latest
+          '''
+        }
+        */
+        echo '✅ Images pushed to Docker Hub'
+      }
+    }
   }
 }
